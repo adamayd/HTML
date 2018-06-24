@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- 
+    crossDomain.html by Bill Weinman 
+    <http://bw.org/contact/>
+    created 2011-04-16
+
+    Copyright (c) 2011 The BearHeart Group, LLC
+    This file may be used for personal educational purposes as needed. 
+    Use for other purposes is granted provided that this notice is
+    retained and any changes made are clearly indicated as such. 
+-->
+
+<head>
+    <title>
+        HTML5 Messaging Template File (One)
+    </title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <style>
+        #frameTwo {
+            float: left;
+            width: 500px;
+            height: 400px;
+            margin: 0 5px;
+            padding: 3px;
+            border-top: 2px solid #3c6b92;
+            border-left: 2px solid #3c6b92;
+            border-bottom: 2px solid #ccc;
+            border-right: 2px solid #ccc;
+        }
+        #content { height: 500px; }
+    </style>
+    <script type="text/javascript">
+        var originTwo = 'http://two.3sn.net';
+        var URLTwo = 'http://two.3sn.net/H5Msg/ExerciseFiles/Chap01/crossDomainTwo.html';
+        var windowTwo = null;
+
+        function handleMessage(event) {
+            if (event.origin == originTwo) {
+                if(!windowTwo) windowTwo = event.source;
+                log('message from origin: ' + event.origin);
+                log(event.data);
+                windowTwo.postMessage('this is from windowOne!', originTwo);
+                log('message sent back to windowTwo');
+            } else {
+                dispError('message from untrusted origin: ' + event.origin);
+            }
+        }
+
+        function init() {
+            window.addEventListener("message", handleMessage, false);
+            window.onerror = windowErrorHandler;
+            log('this is windowOne');
+            log('host: ' + location.host);
+            element('frameTwo').src = URLTwo;   // load the frame
+        }
+
+        // ##### Utilities #####
+
+        // shortcut for getElementById
+        function element(id) { return document.getElementById(id); }
+
+        function clearDisp() {
+            element('pageResults').innerHTML = '';
+            element('message').innerHTML = '';
+            element('message').className = '';
+        }
+
+        function dispMessage(message) {
+            m = element('message');
+            m.className = 'message';
+            if(m.textContent.length > 0) {
+                m.innerHTML += '<br />' + message;
+            } else m.innerHTML = message;
+        }
+
+        function windowErrorHandler(message, filename, lineno) {
+            dispError(message + ' (' + filename + ':' + lineno + ')' );
+            return true;
+        };
+
+        function dispError(errorMessage) {
+            element('pageResults').innerHTML += 
+                errorMessage ? '<p class="error">' + errorMessage + '</p>\n' : '';
+        }
+
+        function log(m) {
+            if(m.length < 1) return;
+            logElement = element('log');
+            if(logElement.textContent.length > 0) logElement.innerHTML += '<br />';
+            logElement.innerHTML += nowTimeString() + ' ' + m;
+        }
+
+        function nowTimeString() {
+            var d = new Date();
+            return numToString(d.getUTCHours(), 2) + ':' + numToString(d.getUTCMinutes(), 2) + ':' +
+                numToString(d.getUTCSeconds(), 2) + '.' + numToString(d.getUTCMilliseconds(), 3);
+        }
+
+        function numToString( num, len ) {
+            var num = num + '';
+            while(num.length < len) num = '0' + num;
+            return num;
+        }
+
+        window.onload = init;
+
+    </script>
+</head>
+
+<body>
+
+<div id="content">
+
+    <h1> 
+        HTML5 Messaging Template File (One)
+    </h1>
+
+    <p id="message"></p>
+    <div id="pageResults"></div>
+
+    <iframe id="frameTwo">
+        <p>Your browser doesn't support the iFrame feature</p>
+    </iframe>
+
+    <p id="log" style="font-family: monospace"></p>
+
+</div>
+</body>
+</html>

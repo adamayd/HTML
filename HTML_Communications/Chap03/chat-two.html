@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- 
+    template.html by Bill Weinman 
+    <http://bw.org/contact/>
+    created 2011-04-16
+
+    Copyright (c) 2011 The BearHeart Group, LLC
+    This file may be used for personal educational purposes as needed. 
+    Use for other purposes is granted provided that this notice is
+    retained and any changes made are clearly indicated as such. 
+-->
+
+<head>
+    <title>
+        HTML5 Messaging Chat Example (Two)
+    </title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <style>
+        .sans { font-family: sans-serif; }
+    </style>
+    <script type="text/javascript">
+        var originOne = 'http://one.3sn.net';
+        var windowOne = null;
+
+        function handleMessage(event) {
+            if (event.origin == originOne) { 1
+                if(!windowOne) windowOne = event.source;
+                var d = JSON.parse(event.data);
+                if(!d) return false;
+                if(d.chat) {
+                    log(d.chat);
+                } else if(d.info) {
+                    log('info: ' + d.info);
+                } else {
+                    log(d);
+                }
+            } else {
+                dispError('message from untrusted origin: ' + event.origin);
+            }
+        }
+
+        // use JSON to send structured data
+        function sendObject(o) {
+            if(!windowOne) { return false; }
+            var s = JSON.stringify(o);
+            windowOne.postMessage(s, originOne);
+            return true;
+        }
+
+        function sendChat() {
+            var chatText = element('chatText').value;
+            if(!windowOne) return false;
+            if(chatText.length < 1) return false;
+            sendObject({ chat : chatText });
+            element('chatText').select();
+            return true;
+        }
+
+        // ##### Init #####
+
+        function init() {
+            window.addEventListener("message", handleMessage, false);
+            window.onerror = windowErrorHandler;
+            log('this is windowTwo');
+            log('host: ' + location.host);
+
+            // send a message to the parent to let it know that windowTwo has finished loading
+            windowOne = parent;
+            sendObject({ info : 'windowTwo loaded' });
+        }
+
+        // ##### Utilities #####
+
+        // shortcut for getElementById
+        function element(id) { return document.getElementById(id); }
+
+        function clearDisp() {
+            element('pageResults').innerHTML = '';
+            element('message').innerHTML = '';
+            element('message').className = '';
+        }
+
+        function dispMessage(message) {
+            m = element('message');
+            m.className = 'message';
+            if(m.textContent.length > 0) {
+                m.innerHTML += '<br />' + message;
+            } else m.innerHTML = message;
+        }
+
+        function windowErrorHandler(message, filename, lineno) {
+            if(message.indexOf('elem is not defined') > 0) return true; // firefox bug
+            dispError(message + ' (' + filename + ':' + lineno + ')' );
+            return true;
+        };
+
+        function dispError(errorMessage) {
+            element('pageResults').innerHTML += 
+                errorMessage ? '<p class="error">' + errorMessage + '</p>\n' : '';
+        }
+
+        function log(m) {
+            if(!m || m.length < 1) return;
+            logElement = element('log');
+            if(logElement.textContent.length > 0) logElement.innerHTML += '<br />';
+            logElement.innerHTML += nowTimeString() + ' ' + m;
+        }
+
+        function nowTimeString() {
+            var d = new Date();
+            return numToString(d.getUTCHours(), 2) + ':' + numToString(d.getUTCMinutes(), 2) + ':' +
+                numToString(d.getUTCSeconds(), 2) + '.' + numToString(d.getUTCMilliseconds(), 3);
+        }
+
+        function numToString( num, len ) {
+            var num = num + '';
+            while(num.length < len) num = '0' + num;
+            return num;
+        }
+
+        window.onload = init;
+
+    </script>
+</head>
+
+<body>
+
+<div id="content">
+
+    <h1> 
+        HTML5 Messaging Chat Example (Two)
+    </h1>
+
+    <p id="message"></p>
+    <div id="pageResults"></div>
+
+    <form onSubmit="sendChat(); return false;">
+        <p class="sans"> Say something witty:
+            <input type="text" style="width: 250px" id="chatText" name="chatText" />
+        </p>
+    </form>
+
+    <p id="log" style="font-family: monospace"></p>
+
+</div>
+</body>
+</html>

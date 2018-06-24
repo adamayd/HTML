@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- 
+    template.html by Bill Weinman 
+    <http://bw.org/contact/>
+    created 2011-04-16
+
+    Copyright (c) 2011 The BearHeart Group, LLC
+    This file may be used for personal educational purposes as needed. 
+    Use for other purposes is granted provided that this notice is
+    retained and any changes made are clearly indicated as such. 
+-->
+
+<head>
+    <title>
+        HTML5 Messaging Chat Example (One)
+    </title>
+    <link rel="stylesheet" type="text/css" href="../CSS/main.css">
+    <style>
+        #frameTwo {
+            float: left;
+            width: 500px;
+            height: 400px;
+            margin: 0 5px;
+            padding: 3px;
+            border-top: 2px solid #3c6b92;
+            border-left: 2px solid #3c6b92;
+            border-bottom: 2px solid #ccc;
+            border-right: 2px solid #ccc;
+        }
+        #content { height: 500px; }
+        .sans { font-family: sans-serif; }
+    </style>
+    <script type="text/javascript">
+        var originTwo = 'http://two.3sn.net';
+        var URLTwo = 'http://two.3sn.net/H5Msg/ExerciseFiles/Chap03/chat-two.html';
+        var windowTwo = null;
+
+        function handleMessage(event) {
+            if (event.origin == originTwo) {
+                if(!windowTwo) windowTwo = event.source;
+                var d = JSON.parse(event.data);
+                if(!d) return false;
+                if(d.chat) {
+                    log(d.chat);
+                } else if(d.info) {
+                    log('info: ' + d.info);
+                } else {
+                    log(d);
+                }
+            } else {
+                dispError('message from untrusted origin: ' + event.origin);
+            }
+        }
+
+        // use JSON to send structured data
+        function sendObject(o) {
+            if(!windowTwo) { return false; }
+            var s = JSON.stringify(o);
+            windowTwo.postMessage(s, originTwo);
+            return true;
+        }
+
+        function sendChat() {
+            var chatText = element('chatText').value;
+            if(chatText.length < 1) return false;
+            sendObject({ chat : chatText });
+            element('chatText').select();
+            return false;
+        }
+
+        function init() {
+            window.addEventListener("message", handleMessage, false);
+            window.onerror = windowErrorHandler;
+            log('this is windowOne');
+            log('host: ' + location.host);
+            element('frameTwo').src = URLTwo;   // load the frame
+            element('chatText').select();
+        }
+
+        // ##### Utilities #####
+
+        // shortcut for getElementById
+        function element(id) { return document.getElementById(id); }
+
+        function clearDisp() {
+            element('pageResults').innerHTML = '';
+            element('message').innerHTML = '';
+            element('message').className = '';
+        }
+
+        function dispMessage(message) {
+            m = element('message');
+            m.className = 'message';
+            if(m.textContent.length > 0) {
+                m.innerHTML += '<br />' + message;
+            } else m.innerHTML = message;
+        }
+
+        function windowErrorHandler(message, filename, lineno) {
+            if(message.indexOf('elem is not defined') > 0) return true; // firefox bug
+            dispError(message + ' (' + filename + ':' + lineno + ')' );
+            return true;
+        };
+
+        function dispError(errorMessage) {
+            element('pageResults').innerHTML += 
+                errorMessage ? '<p class="error">' + errorMessage + '</p>\n' : '';
+        }
+
+        function log(m) {
+            if(!m || m.length < 1) return;
+            logElement = element('log');
+            if(logElement.textContent.length > 0) logElement.innerHTML += '<br />';
+            logElement.innerHTML += nowTimeString() + ' ' + m;
+        }
+
+        function nowTimeString() {
+            var d = new Date();
+            return numToString(d.getUTCHours(), 2) + ':' + numToString(d.getUTCMinutes(), 2) + ':' +
+                numToString(d.getUTCSeconds(), 2) + '.' + numToString(d.getUTCMilliseconds(), 3);
+        }
+
+        function numToString( num, len ) {
+            var num = num + '';
+            while(num.length < len) num = '0' + num;
+            return num;
+        }
+
+        window.onload = init;
+
+    </script>
+</head>
+
+<body>
+
+<div id="content">
+
+    <h1> 
+        HTML5 Messaging Chat Example (One)
+    </h1>
+
+    <p id="message"></p>
+    <div id="pageResults"></div>
+
+    <iframe id="frameTwo">
+        <p>Your browser doesn't support the iFrame feature</p>
+    </iframe>
+
+    <form onSubmit="sendChat(); return false;">
+        <p class="sans"> Say something witty:
+            <input type="text" style="width: 250px" id="chatText" name="chatText" />
+        </p>
+    </form>
+
+    <p id="log" style="font-family: monospace"></p>
+
+</div>
+</body>
+</html>
